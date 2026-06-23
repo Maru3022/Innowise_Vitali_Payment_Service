@@ -1,5 +1,6 @@
 package com.example.innowise_vitali_payment_service.config;
 
+import com.mongodb.ConnectionString;
 import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -33,6 +34,7 @@ public class LiquibaseConfig {
         log.info("Initializing Liquibase MongoDB schema migration updates...");
 
         try (MongoConnection connection = new MongoConnection()) {
+            connection.setConnectionString(new ConnectionString(mongoUri));
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(connection);
 
             try (Liquibase liquibase = new Liquibase(changeLog, new ClassLoaderResourceAccessor(), database)) {
