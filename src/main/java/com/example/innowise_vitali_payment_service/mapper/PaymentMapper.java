@@ -1,6 +1,7 @@
 package com.example.innowise_vitali_payment_service.mapper;
 
 import com.example.innowise_vitali_payment_service.dto.CreatePaymentRequest;
+import com.example.innowise_vitali_payment_service.dto.PaymentResponse;
 import com.example.innowise_vitali_payment_service.entity.Payment;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -13,5 +14,5 @@ public interface PaymentMapper {
     @Mapping(target = "timestamp", ignore = true)
     Payment toEntity(CreatePaymentRequest request);
 
-    com.example.paymentservice.dto.PaymentResponse toResponse(Payment payment);
+    PaymentResponse toResponse(Payment payment);
 }
