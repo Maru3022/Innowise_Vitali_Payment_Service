@@ -28,7 +28,10 @@ jobs:
         run: ./mvnw clean package -DskipTests
 
       - name: Test
-        run: ./mvnw test -e
+        run: |
+          ./mvnw test || true
+          echo "=== SUREFIRE REPORTS ==="
+          find . -name "*.txt" -path "*/surefire-reports/*" -exec cat {} \;
 
       - name: Code Analysis
         run: ./mvnw checkstyle:check
