@@ -1,0 +1,16 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/paymentdb
+      auto-index-creation: false
+  liquibase:
+    enabled: false
+
+external:
+  random-api:
+    url: http://localhost:8080/random
+
+kafka:
+  bootstrap-servers: localhost:9092
+  topic:
+    payment: CREATE_PAYMENT
