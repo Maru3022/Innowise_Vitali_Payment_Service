@@ -1,21 +1,16 @@
-server:
-  port: 8081
-
 spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/paymentdb
       auto-index-creation: false
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.xml
-    enabled: true
-    url: mongodb://localhost:27017/paymentdb
+    enabled: false
 
 external:
   random-api:
-    url: http://www.randomnumberapi.com/api/v1.0/random?min=1&max=100&count=1
+    url: http://localhost:9999/random
 
 kafka:
-  bootstrap-servers: localhost:9099
+  bootstrap-servers: localhost:9092
   topic:
     payment: CREATE_PAYMENT
