@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<module name="Checker">
+
+    <module name="LineLength">
+        <property name="max" value="130"/>
+    </module>
+
+    <module name="FileTabCharacter"/>
+
+    <module name="TreeWalker">
+        <module name="AvoidStarImport"/>
+        <module name="RedundantImport"/>
+
+        <module name="EqualsHashCode"/>
+        <module name="EmptyBlock"/>
+        <module name="NeedBraces"/>
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+
+        <module name="HideUtilityClassConstructor"/>
+        <module name="InterfaceIsType"/>
+        <module name="ArrayTypeStyle"/>
+
+        <module name="HiddenField">
+            <property name="ignoreConstructorParameter" value="true"/>
+            <property name="ignoreSetter" value="true"/>
+        </module>
+    </module>
+</module>
