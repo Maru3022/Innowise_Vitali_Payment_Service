@@ -36,15 +36,3 @@ jobs:
       - name: Code Analysis
         run: ./mvnw checkstyle:check
         continue-on-error: true
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and Push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: ${{ github.ref == 'refs/heads/dev' }}
-          tags: ${{ secrets.DOCKER_USERNAME }}/payment-service:${{ github.sha }},${{ secrets.DOCKER_USERNAME }}/payment-service:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
