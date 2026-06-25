@@ -1,0 +1,50 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "dev", "feature/**" ]
+  pull_request:
+    branches: [ "dev" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build
+        run: ./mvnw clean package -DskipTests
+
+      - name: Test
+        run: ./mvnw test
+
+      - name: Code Analysis
+        run: ./mvnw checkstyle:check
+        continue-on-error: true
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.ref == 'refs/heads/dev' }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/payment-service:${{ github.sha }},${{ secrets.DOCKER_USERNAME }}/payment-service:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

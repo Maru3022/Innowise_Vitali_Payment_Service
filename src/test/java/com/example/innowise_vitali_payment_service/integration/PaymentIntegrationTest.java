@@ -1,10 +1,11 @@
-﻿package com.example.innowise_vitali_payment_service.integration;
+package com.example.innowise_vitali_payment_service.integration;
 
 import com.example.innowise_vitali_payment_service.dto.CreatePaymentRequest;
 import com.example.innowise_vitali_payment_service.entity.PaymentStatus;
 import com.example.innowise_vitali_payment_service.repository.PaymentRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,7 +26,6 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.math.BigDecimal;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -256,8 +256,8 @@ class PaymentIntegrationTest {
     }
 
     private void stubRandomApi(String body) {
-        wireMockServer.stubFor(get(urlPathEqualTo("/random"))
-                .willReturn(aResponse()
+        wireMockServer.stubFor(WireMock.get(WireMock.urlPathEqualTo("/random"))
+                .willReturn(WireMock.aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(body)));
     }
