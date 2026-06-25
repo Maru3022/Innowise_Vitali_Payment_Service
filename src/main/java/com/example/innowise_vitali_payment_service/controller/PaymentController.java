@@ -1,6 +1,7 @@
 package com.example.innowise_vitali_payment_service.controller;
 
 import com.example.innowise_vitali_payment_service.dto.CreatePaymentRequest;
+import com.example.innowise_vitali_payment_service.dto.PaymentResponse;
 import com.example.innowise_vitali_payment_service.dto.PaymentSumResponse;
 import com.example.innowise_vitali_payment_service.entity.PaymentStatus;
 import com.example.innowise_vitali_payment_service.service.PaymentService;
@@ -22,22 +23,22 @@ public class PaymentController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public com.example.paymentservice.dto.PaymentResponse createPayment(@Valid @RequestBody CreatePaymentRequest request) {
+    public PaymentResponse createPayment(@Valid @RequestBody CreatePaymentRequest request) {
         return paymentService.createPayment(request);
     }
 
     @GetMapping("/user/{userId}")
-    public List<com.example.paymentservice.dto.PaymentResponse> getByUserId(@PathVariable String userId) {
+    public List<PaymentResponse> getByUserId(@PathVariable String userId) {
         return paymentService.getPaymentsByUserId(userId);
     }
 
     @GetMapping("/order/{orderId}")
-    public List<com.example.paymentservice.dto.PaymentResponse> getByOrderId(@PathVariable String orderId) {
+    public List<PaymentResponse> getByOrderId(@PathVariable String orderId) {
         return paymentService.getPaymentsByOrderId(orderId);
     }
 
     @GetMapping("/status/{status}")
-    public List<com.example.paymentservice.dto.PaymentResponse> getByStatus(@PathVariable PaymentStatus status) {
+    public List<PaymentResponse> getByStatus(@PathVariable PaymentStatus status) {
         return paymentService.getPaymentsByStatus(status);
     }
 
