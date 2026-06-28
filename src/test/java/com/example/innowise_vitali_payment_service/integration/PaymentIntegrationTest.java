@@ -36,6 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 class PaymentIntegrationTest {
 
+    private static final String SECRET_HEADER = "X-Internal-Secret";
+    private static final String SECRET_VALUE = "test-secret";
+
     @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer(
             DockerImageName.parse("mongo:7.0")
@@ -71,9 +74,10 @@ class PaymentIntegrationTest {
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-        registry.add("kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
+        registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
         registry.add("external.random-api.url", () ->
                 "http://localhost:" + wireMockServer.port() + "/random");
+        registry.add("internal.secret", () -> SECRET_VALUE);
     }
 
     @BeforeEach
@@ -87,6 +91,7 @@ class PaymentIntegrationTest {
         stubRandomApi("[4]");
 
         mockMvc.perform(post("/api/v1/payments")
+                        .header(SECRET_HEADER, SECRET_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-1", "99.99"))))
                 .andExpect(status().isCreated())
@@ -103,6 +108,7 @@ class PaymentIntegrationTest {
         stubRandomApi("[5]");
 
         mockMvc.perform(post("/api/v1/payments")
+                        .header(SECRET_HEADER, SECRET_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(buildRequest("order-2", "user-2", "50.00"))))
                 .andExpect(status().isCreated())
@@ -114,6 +120,7 @@ class PaymentIntegrationTest {
         stubRandomApi("[2]");
 
         mockMvc.perform(post("/api/v1/payments")
+                        .header(SECRET_HEADER, SECRET_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(buildRequest("order-3", "user-3", "100.00"))))
                 .andExpect(status().isCreated());
@@ -131,6 +138,7 @@ class PaymentIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/payments")
+                        .header(SECRET_HEADER, SECRET_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -145,6 +153,7 @@ class PaymentIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/payments")
+                        .header(SECRET_HEADER, SECRET_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -159,9 +168,27 @@ class PaymentIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/payments")
+                        .header(SECRET_HEADER, SECRET_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createPayment_withoutSecret_returns401() throws Exception {
+        mockMvc.perform(post("/api/v1/payments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-1", "10.00"))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void createPayment_withWrongSecret_returns401() throws Exception {
+        mockMvc.perform(post("/api/v1/payments")
+                        .header(SECRET_HEADER, "wrong-secret")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-1", "10.00"))))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -169,10 +196,12 @@ class PaymentIntegrationTest {
         stubRandomApi("[2]");
 
         mockMvc.perform(post("/api/v1/payments")
+                .header(SECRET_HEADER, SECRET_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-10", "50.00"))));
 
-        mockMvc.perform(get("/api/v1/payments/user/user-10"))
+        mockMvc.perform(get("/api/v1/payments/user/user-10")
+                        .header(SECRET_HEADER, SECRET_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].userId").value("user-10"));
@@ -180,7 +209,8 @@ class PaymentIntegrationTest {
 
     @Test
     void getByUserId_whenNoPayments_returnsEmptyList() throws Exception {
-        mockMvc.perform(get("/api/v1/payments/user/nonexistent-user"))
+        mockMvc.perform(get("/api/v1/payments/user/nonexistent-user")
+                        .header(SECRET_HEADER, SECRET_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
@@ -190,10 +220,12 @@ class PaymentIntegrationTest {
         stubRandomApi("[2]");
 
         mockMvc.perform(post("/api/v1/payments")
+                .header(SECRET_HEADER, SECRET_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(buildRequest("order-99", "user-1", "50.00"))));
 
-        mockMvc.perform(get("/api/v1/payments/order/order-99"))
+        mockMvc.perform(get("/api/v1/payments/order/order-99")
+                        .header(SECRET_HEADER, SECRET_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].orderId").value("order-99"));
@@ -201,7 +233,8 @@ class PaymentIntegrationTest {
 
     @Test
     void getByOrderId_whenNoPayments_returnsEmptyList() throws Exception {
-        mockMvc.perform(get("/api/v1/payments/order/nonexistent-order"))
+        mockMvc.perform(get("/api/v1/payments/order/nonexistent-order")
+                        .header(SECRET_HEADER, SECRET_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
@@ -211,10 +244,12 @@ class PaymentIntegrationTest {
         stubRandomApi("[2]");
 
         mockMvc.perform(post("/api/v1/payments")
+                .header(SECRET_HEADER, SECRET_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-1", "50.00"))));
 
-        mockMvc.perform(get("/api/v1/payments/status/SUCCESS"))
+        mockMvc.perform(get("/api/v1/payments/status/SUCCESS")
+                        .header(SECRET_HEADER, SECRET_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("SUCCESS"));
     }
@@ -224,10 +259,12 @@ class PaymentIntegrationTest {
         stubRandomApi("[2]");
 
         mockMvc.perform(post("/api/v1/payments")
+                .header(SECRET_HEADER, SECRET_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-sum", "100.00"))));
 
         mockMvc.perform(get("/api/v1/payments/sum/user/user-sum")
+                        .header(SECRET_HEADER, SECRET_VALUE)
                         .param("from", "2020-01-01T00:00:00")
                         .param("to", "2099-01-01T00:00:00"))
                 .andExpect(status().isOk())
@@ -236,7 +273,8 @@ class PaymentIntegrationTest {
 
     @Test
     void getSumForUser_withoutParams_returns400() throws Exception {
-        mockMvc.perform(get("/api/v1/payments/sum/user/user-1"))
+        mockMvc.perform(get("/api/v1/payments/sum/user/user-1")
+                        .header(SECRET_HEADER, SECRET_VALUE))
                 .andExpect(status().isBadRequest());
     }
 
@@ -245,10 +283,12 @@ class PaymentIntegrationTest {
         stubRandomApi("[2]");
 
         mockMvc.perform(post("/api/v1/payments")
+                .header(SECRET_HEADER, SECRET_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-1", "200.00"))));
 
         mockMvc.perform(get("/api/v1/payments/sum/admin")
+                        .header(SECRET_HEADER, SECRET_VALUE)
                         .param("from", "2020-01-01T00:00:00")
                         .param("to", "2099-01-01T00:00:00"))
                 .andExpect(status().isOk())
