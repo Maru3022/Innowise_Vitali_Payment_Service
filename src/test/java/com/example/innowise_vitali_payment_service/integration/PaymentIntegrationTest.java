@@ -49,6 +49,14 @@ class PaymentIntegrationTest {
             DockerImageName.parse("confluentinc/cp-kafka:7.6.0")
     );
 
+    @Container
+    static org.testcontainers.containers.GenericContainer<?> schemaRegistryContainer = new org.testcontainers.containers.GenericContainer<>(
+            DockerImageName.parse("confluentinc/cp-schema-registry:7.6.0")
+    ).withExposedPorts(8081)
+     .withEnv("SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS", "PLAINTEXT://kafka:9092")
+     .withNetwork(kafkaContainer.getNetwork())
+     .dependsOn(kafkaContainer);
+
     static WireMockServer wireMockServer;
 
     @Autowired
@@ -75,6 +83,8 @@ class PaymentIntegrationTest {
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
         registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
+        registry.add("schema.registry.url", () ->
+                "http://" + schemaRegistryContainer.getHost() + ":" + schemaRegistryContainer.getMappedPort(8081));
         registry.add("external.random-api.url", () ->
                 "http://localhost:" + wireMockServer.port() + "/random");
         registry.add("internal.secret", () -> SECRET_VALUE);
