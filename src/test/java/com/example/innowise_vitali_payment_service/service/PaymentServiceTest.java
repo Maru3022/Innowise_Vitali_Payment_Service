@@ -6,7 +6,7 @@ import com.example.innowise_vitali_payment_service.dto.PaymentResponse;
 import com.example.innowise_vitali_payment_service.dto.PaymentSumResponse;
 import com.example.innowise_vitali_payment_service.entity.Payment;
 import com.example.innowise_vitali_payment_service.entity.PaymentStatus;
-import com.example.innowise_vitali_payment_service.kafka.PaymentEvent;
+import com.example.events.PaymentEvent;
 import com.example.innowise_vitali_payment_service.kafka.PaymentProducer;
 import com.example.innowise_vitali_payment_service.mapper.PaymentMapper;
 import com.example.innowise_vitali_payment_service.repository.PaymentRepository;
