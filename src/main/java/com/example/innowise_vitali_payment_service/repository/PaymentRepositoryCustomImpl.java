@@ -3,21 +3,13 @@ package com.example.innowise_vitali_payment_service.repository;
 import com.example.innowise_vitali_payment_service.entity.Payment;
 import com.example.innowise_vitali_payment_service.entity.PaymentStatus;
 import lombok.RequiredArgsConstructor;
-import org.bson.Document;
-import org.bson.types.Decimal128;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.GroupOperation;
-import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -47,54 +39,29 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
 
     @Override
     public BigDecimal sumPaymentAmountByUserIdAndTimestampBetween(String userId, LocalDateTime from, LocalDateTime to) {
-        // Convert LocalDateTime to Date for proper MongoDB comparison
-        Date fromDate = Date.from(from.atZone(ZoneId.systemDefault()).toInstant());
-        Date toDate = Date.from(to.atZone(ZoneId.systemDefault()).toInstant());
-
-        MatchOperation matchStage = Aggregation.match(
+        Query query = new Query(
                 Criteria.where("user_id").is(userId)
-                        .and("timestamp").gte(fromDate).lte(toDate)
+                        .and("timestamp").gte(from).lte(to)
         );
 
-        GroupOperation groupStage = Aggregation.group().sum("payment_amount").as("totalAmount");
-
-        Aggregation aggregation = Aggregation.newAggregation(matchStage, groupStage);
-        AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, Payment.class, Document.class);
-
-        Document uniqueResult = results.getUniqueMappedResult();
-
-        return extractBigDecimal(uniqueResult, "totalAmount");
+        return sumPaymentAmounts(query);
     }
 
     @Override
     public BigDecimal sumPaymentAmountByTimestampBetween(LocalDateTime from, LocalDateTime to) {
-        // Convert LocalDateTime to Date for proper MongoDB comparison
-        Date fromDate = Date.from(from.atZone(ZoneId.systemDefault()).toInstant());
-        Date toDate = Date.from(to.atZone(ZoneId.systemDefault()).toInstant());
-
-        MatchOperation matchStage = Aggregation.match(
-                Criteria.where("timestamp").gte(fromDate).lte(toDate)
+        Query query = new Query(
+                Criteria.where("timestamp").gte(from).lte(to)
         );
 
-        GroupOperation groupStage = Aggregation.group().sum("payment_amount").as("totalAmount");
-
-        Aggregation aggregation = Aggregation.newAggregation(matchStage, groupStage);
-        AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, Payment.class, Document.class);
-
-        Document uniqueResult = results.getUniqueMappedResult();
-
-        return extractBigDecimal(uniqueResult, "totalAmount");
+        return sumPaymentAmounts(query);
     }
 
-    private BigDecimal extractBigDecimal(Document resultDoc, String fieldName) {
-        if (resultDoc != null && resultDoc.get(fieldName) != null) {
-            Object rawValue = resultDoc.get(fieldName);
-            if (rawValue instanceof Decimal128) {
-                return ((Decimal128) rawValue).bigDecimalValue();
-            } else if (rawValue instanceof Number) {
-                return BigDecimal.valueOf(((Number) rawValue).doubleValue());
-            }
-        }
-        return BigDecimal.ZERO;
+    private BigDecimal sumPaymentAmounts(Query query) {
+        List<Payment> payments = mongoTemplate.find(query, Payment.class);
+
+        return payments.stream()
+                .map(Payment::getPaymentAmount)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
