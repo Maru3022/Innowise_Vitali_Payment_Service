@@ -20,7 +20,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -35,7 +34,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.kafka.enabled=false",
+        "spring.autoconfigure.exclude=org.springframework.kafka.autoconfigure.KafkaAutoConfiguration"
+})
 @AutoConfigureMockMvc
 @Testcontainers
 class PaymentIntegrationTest {
@@ -46,11 +48,6 @@ class PaymentIntegrationTest {
     @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer(
             DockerImageName.parse("mongo:7.0")
-    );
-
-    @Container
-    static KafkaContainer kafkaContainer = new KafkaContainer(
-            DockerImageName.parse("confluentinc/cp-kafka:7.6.0")
     );
 
     static WireMockServer wireMockServer;
@@ -81,8 +78,6 @@ class PaymentIntegrationTest {
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-        registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
-        registry.add("schema.registry.url", () -> "");
         registry.add("external.random-api.url", () ->
                 "http://localhost:" + wireMockServer.port() + "/random");
         registry.add("internal.secret", () -> SECRET_VALUE);
