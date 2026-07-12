@@ -2,6 +2,7 @@ package com.example.innowise_vitali_payment_service.integration;
 
 import com.example.innowise_vitali_payment_service.dto.CreatePaymentRequest;
 import com.example.innowise_vitali_payment_service.entity.PaymentStatus;
+import com.example.innowise_vitali_payment_service.kafka.PaymentProducer;
 import com.example.innowise_vitali_payment_service.repository.PaymentRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -27,6 +29,8 @@ import org.testcontainers.utility.DockerImageName;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -60,6 +64,9 @@ class PaymentIntegrationTest {
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @MockBean
+    private PaymentProducer paymentProducer;
+
     @BeforeAll
     static void beforeAll() {
         wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
@@ -75,7 +82,7 @@ class PaymentIntegrationTest {
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
         registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
-        registry.add("spring.kafka.producer.properties.auto.register.schemas", () -> "true");
+        registry.add("schema.registry.url", () -> "");
         registry.add("external.random-api.url", () ->
                 "http://localhost:" + wireMockServer.port() + "/random");
         registry.add("internal.secret", () -> SECRET_VALUE);
@@ -85,6 +92,7 @@ class PaymentIntegrationTest {
     void setUp() {
         paymentRepository.deleteAll();
         wireMockServer.resetAll();
+        doNothing().when(paymentProducer).sendPaymentEvent(any());
     }
 
     @Test
