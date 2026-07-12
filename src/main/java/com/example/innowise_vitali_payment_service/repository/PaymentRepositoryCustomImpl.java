@@ -16,6 +16,8 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -45,9 +47,13 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
 
     @Override
     public BigDecimal sumPaymentAmountByUserIdAndTimestampBetween(String userId, LocalDateTime from, LocalDateTime to) {
+        // Convert LocalDateTime to Date for proper MongoDB comparison
+        Date fromDate = Date.from(from.atZone(ZoneId.systemDefault()).toInstant());
+        Date toDate = Date.from(to.atZone(ZoneId.systemDefault()).toInstant());
+
         MatchOperation matchStage = Aggregation.match(
                 Criteria.where("user_id").is(userId)
-                        .and("timestamp").gte(from).lte(to)
+                        .and("timestamp").gte(fromDate).lte(toDate)
         );
 
         GroupOperation groupStage = Aggregation.group().sum("payment_amount").as("totalAmount");
@@ -62,8 +68,12 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
 
     @Override
     public BigDecimal sumPaymentAmountByTimestampBetween(LocalDateTime from, LocalDateTime to) {
+        // Convert LocalDateTime to Date for proper MongoDB comparison
+        Date fromDate = Date.from(from.atZone(ZoneId.systemDefault()).toInstant());
+        Date toDate = Date.from(to.atZone(ZoneId.systemDefault()).toInstant());
+
         MatchOperation matchStage = Aggregation.match(
-                Criteria.where("timestamp").gte(from).lte(to)
+                Criteria.where("timestamp").gte(fromDate).lte(toDate)
         );
 
         GroupOperation groupStage = Aggregation.group().sum("payment_amount").as("totalAmount");
