@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: online-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: payment-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8084
+          env:
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-service-config
+                  key: SERVER_PORT
+            - name: SPRING_DATA_MONGODB_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-service-config
+                  key: SPRING_DATA_MONGODB_URI
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-service-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: SCHEMA_REGISTRY_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-service-config
+                  key: SCHEMA_REGISTRY_URL
+            - name: EXTERNAL_RANDOM_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-service-config
+                  key: EXTERNAL_RANDOM_API_URL
+            - name: SPRING_LIQUIBASE_CHANGE_LOG
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-service-config
+                  key: SPRING_LIQUIBASE_CHANGE_LOG
+            - name: INTERNAL_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: payment-service-secret
+                  key: INTERNAL_SECRET
+          # TCP probe since actuator is not enabled
+          livenessProbe:
+            tcpSocket:
+              port: 8084
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 6
+          readinessProbe:
+              tcpSocket:
+                port: 8084
+              initialDelaySeconds: 45
+              periodSeconds: 5
+              failureThreshold: 6

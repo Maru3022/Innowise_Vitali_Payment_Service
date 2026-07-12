@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "OrderCreatedEvent",
+  "namespace": "com.example.events",
+  "fields": [
+    { "name": "orderId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    {
+      "name": "totalPrice",
+      "type": {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 19,
+        "scale": 2
+      }
+    }
+  ]
+}

@@ -1,3 +1,6 @@
+server:
+  port: ${SERVER_PORT:8081}
+
 spring:
   data:
     mongodb:
@@ -5,16 +8,26 @@ spring:
       auto-index-creation: false
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-  liquibase:
-    enabled: false
+    consumer:
+      group-id: payment-service-group
+      auto-offset-reset: earliest
+    producer:
+      properties:
+        auto.register.schemas: false
+        use.latest.version: true
+
+schema:
+  registry:
+    url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
 
 external:
   random-api:
-    url: http://localhost:9999/random
+    url: ${EXTERNAL_RANDOM_API_URL:http://localhost:9999/random}
 
 kafka:
   topic:
     payment: CREATE_PAYMENT
+    payment-result: PAYMENT_RESULT
 
 internal:
   secret: ${INTERNAL_SECRET:dev-secret}

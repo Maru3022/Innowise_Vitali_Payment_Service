@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-service-config
+  namespace: online-store
+data:
+  SERVER_PORT: "8084"
+  SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/paymentdb
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SCHEMA_REGISTRY_URL: http://schema-registry:8081
+  # WARNING: EXTERNAL_RANDOM_API_URL should point to a mock random-api service in the cluster
+  # For now using localhost default - update to actual service when available
+  EXTERNAL_RANDOM_API_URL: http://localhost:9999/random
+  SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
