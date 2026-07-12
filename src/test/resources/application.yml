@@ -6,6 +6,10 @@ spring:
   liquibase:
     enabled: false
 
+schema:
+  registry:
+    url: http://localhost:8081
+
 external:
   random-api:
     url: http://localhost:8080/random
@@ -14,3 +18,4 @@ kafka:
   bootstrap-servers: localhost:9092
   topic:
     payment: CREATE_PAYMENT
+    payment-result: PAYMENT_RESULT
