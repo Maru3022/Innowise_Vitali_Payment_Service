@@ -29,11 +29,11 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
         Query query = new Query();
 
         if (userId != null && !userId.isBlank()) {
-            query.addCriteria(Criteria.where("userId").is(userId));
+            query.addCriteria(Criteria.where("user_id").is(userId));
         }
 
         if (orderId != null && !orderId.isBlank()) {
-            query.addCriteria(Criteria.where("orderId").is(orderId));
+            query.addCriteria(Criteria.where("order_id").is(orderId));
         }
 
         if (status != null) {
@@ -46,7 +46,7 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
     @Override
     public BigDecimal sumPaymentAmountByUserIdAndTimestampBetween(String userId, LocalDateTime from, LocalDateTime to) {
         MatchOperation matchStage = Aggregation.match(
-                Criteria.where("userId").is(userId)
+                Criteria.where("user_id").is(userId)
                         .and("timestamp").gte(from).lte(to)
         );
 

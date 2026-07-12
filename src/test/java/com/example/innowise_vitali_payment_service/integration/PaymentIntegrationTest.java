@@ -265,7 +265,10 @@ class PaymentIntegrationTest {
         mockMvc.perform(post("/api/v1/payments")
                 .header(SECRET_HEADER, SECRET_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-sum", "100.00"))));
+                .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-sum", "100.00"))))
+                .andExpect(status().isCreated());
+
+        assertEquals(1, paymentRepository.count());
 
         mockMvc.perform(get("/api/v1/payments/sum/user/user-sum")
                         .header(SECRET_HEADER, SECRET_VALUE)
@@ -289,7 +292,10 @@ class PaymentIntegrationTest {
         mockMvc.perform(post("/api/v1/payments")
                 .header(SECRET_HEADER, SECRET_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-1", "200.00"))));
+                .content(objectMapper.writeValueAsString(buildRequest("order-1", "user-1", "200.00"))))
+                .andExpect(status().isCreated());
+
+        assertEquals(1, paymentRepository.count());
 
         mockMvc.perform(get("/api/v1/payments/sum/admin")
                         .header(SECRET_HEADER, SECRET_VALUE)
