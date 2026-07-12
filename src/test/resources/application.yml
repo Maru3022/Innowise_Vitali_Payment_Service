@@ -5,6 +5,11 @@ spring:
       auto-index-creation: false
   liquibase:
     enabled: false
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: payment-service-group
+      auto-offset-reset: earliest
 
 schema:
   registry:
@@ -15,7 +20,6 @@ external:
     url: http://localhost:8080/random
 
 kafka:
-  bootstrap-servers: localhost:9092
   topic:
     payment: CREATE_PAYMENT
     payment-result: PAYMENT_RESULT
