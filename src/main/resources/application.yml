@@ -1,21 +1,33 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 spring:
   data:
     mongodb:
-      uri: mongodb://localhost:27017/paymentdb
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/paymentdb}
       auto-index-creation: false
-  liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.xml
-    enabled: true
-    url: mongodb://localhost:27017/paymentdb
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: payment-service-group
+      auto-offset-reset: earliest
+    producer:
+      properties:
+        auto.register.schemas: false
+        use.latest.version: true
+
+schema:
+  registry:
+    url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
 
 external:
   random-api:
-    url: http://www.randomnumberapi.com/api/v1.0/random?min=1&max=100&count=1
+    url: ${EXTERNAL_RANDOM_API_URL:http://localhost:9999/random}
 
 kafka:
-  bootstrap-servers: localhost:9099
   topic:
     payment: CREATE_PAYMENT
+    payment-result: PAYMENT_RESULT
+
+internal:
+  secret: ${INTERNAL_SECRET:dev-secret}

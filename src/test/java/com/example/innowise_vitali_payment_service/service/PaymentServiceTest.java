@@ -6,7 +6,7 @@ import com.example.innowise_vitali_payment_service.dto.PaymentResponse;
 import com.example.innowise_vitali_payment_service.dto.PaymentSumResponse;
 import com.example.innowise_vitali_payment_service.entity.Payment;
 import com.example.innowise_vitali_payment_service.entity.PaymentStatus;
-import com.example.innowise_vitali_payment_service.kafka.PaymentEvent;
+import com.example.events.PaymentEvent;
 import com.example.innowise_vitali_payment_service.kafka.PaymentProducer;
 import com.example.innowise_vitali_payment_service.mapper.PaymentMapper;
 import com.example.innowise_vitali_payment_service.repository.PaymentRepository;
@@ -50,11 +50,13 @@ class PaymentServiceTest {
         Payment payment = new Payment();
         Payment saved = buildPayment("pay-1", "order-1", "user-1", PaymentStatus.SUCCESS, BigDecimal.TEN);
         PaymentResponse response = buildResponse("pay-1", PaymentStatus.SUCCESS);
+        PaymentEvent event = new PaymentEvent();
 
         when(paymentMapper.toEntity(request)).thenReturn(payment);
         when(randomNumberClient.getRandomNumber()).thenReturn(4);
         when(paymentRepository.save(any())).thenReturn(saved);
         when(paymentMapper.toResponse(saved)).thenReturn(response);
+        when(paymentProducer.createPaymentEvent(any(), any(), any(), any())).thenReturn(event);
 
         PaymentResponse result = paymentService.createPayment(request);
 
@@ -69,11 +71,13 @@ class PaymentServiceTest {
         Payment payment = new Payment();
         Payment saved = buildPayment("pay-2", "order-2", "user-2", PaymentStatus.FAILED, BigDecimal.TEN);
         PaymentResponse response = buildResponse("pay-2", PaymentStatus.FAILED);
+        PaymentEvent event = new PaymentEvent();
 
         when(paymentMapper.toEntity(request)).thenReturn(payment);
         when(randomNumberClient.getRandomNumber()).thenReturn(3);
         when(paymentRepository.save(any())).thenReturn(saved);
         when(paymentMapper.toResponse(saved)).thenReturn(response);
+        when(paymentProducer.createPaymentEvent(any(), any(), any(), any())).thenReturn(event);
 
         PaymentResponse result = paymentService.createPayment(request);
 
@@ -135,19 +139,25 @@ class PaymentServiceTest {
         Payment payment = new Payment();
         Payment saved = buildPayment("pay-6", "order-6", "user-6", PaymentStatus.SUCCESS, new BigDecimal("99.99"));
         PaymentResponse response = buildResponse("pay-6", PaymentStatus.SUCCESS);
+        PaymentEvent event = new PaymentEvent();
+        event.setPaymentId("pay-6");
+        event.setOrderId("order-6");
+        event.setUserId("user-6");
+        event.setStatus(com.example.events.PaymentStatus.SUCCESS);
 
         when(paymentMapper.toEntity(request)).thenReturn(payment);
         when(randomNumberClient.getRandomNumber()).thenReturn(2);
         when(paymentRepository.save(any())).thenReturn(saved);
         when(paymentMapper.toResponse(saved)).thenReturn(response);
+        when(paymentProducer.createPaymentEvent(any(), any(), any(), any())).thenReturn(event);
 
         paymentService.createPayment(request);
 
-        verify(paymentProducer).sendPaymentEvent(argThat(event ->
-                "pay-6".equals(event.getPaymentId()) &&
-                        "order-6".equals(event.getOrderId()) &&
-                        "user-6".equals(event.getUserId()) &&
-                        PaymentStatus.SUCCESS.equals(event.getStatus())
+        verify(paymentProducer).sendPaymentEvent(argThat(e ->
+                "pay-6".equals(e.getPaymentId()) &&
+                        "order-6".equals(e.getOrderId()) &&
+                        "user-6".equals(e.getUserId()) &&
+                        com.example.events.PaymentStatus.SUCCESS.equals(e.getStatus())
         ));
     }
 

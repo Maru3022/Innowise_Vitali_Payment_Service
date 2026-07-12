@@ -1,0 +1,25 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/paymentdb
+      auto-index-creation: false
+  liquibase:
+    enabled: false
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: payment-service-group
+      auto-offset-reset: earliest
+
+schema:
+  registry:
+    url: http://localhost:8081
+
+external:
+  random-api:
+    url: http://localhost:8080/random
+
+kafka:
+  topic:
+    payment: CREATE_PAYMENT
+    payment-result: PAYMENT_RESULT

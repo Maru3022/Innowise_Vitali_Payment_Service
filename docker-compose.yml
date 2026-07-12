@@ -7,10 +7,15 @@ services:
       - "8081:8081"
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/paymentdb
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9099
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-change-me-in-production}
     depends_on:
       - mongodb
       - kafka
+      - schema-registry
+    networks:
+      - shared-network
 
   mongodb:
     image: mongo:7.0
@@ -18,11 +23,15 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - shared-network
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - shared-network
 
   kafka:
     image: confluentinc/cp-kafka:7.6.0
@@ -35,6 +44,26 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
+    networks:
+      - shared-network
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.0
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    networks:
+      - shared-network
 
 volumes:
   mongo_data:
+
+networks:
+  shared-network:
+    external: true
+    name: shared-network
